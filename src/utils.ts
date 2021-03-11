@@ -8,7 +8,6 @@ import { WebhookBody, PotentialAction } from "./models";
 import { formatCompactLayout } from "./layouts/compact";
 import { formatCozyLayout } from "./layouts/cozy";
 import { formatCompleteLayout } from "./layouts/complete";
-import { CONCLUSION_THEMES } from "./constants";
 
 export function escapeMarkdownTokens(text: string) {
   return text
@@ -26,10 +25,10 @@ export function getRunInformation() {
   return {
     owner,
     repo,
-    ref: process.env.GITHUB_SHA || undefined,
+    ref: process.env.GITHUB_SHA || "",
     branchUrl: `https://github.com/${process.env.GITHUB_REPOSITORY}/tree/${process.env.GITHUB_REF}`,
-    runId: process.env.GITHUB_RUN_ID || undefined,
-    runNum: process.env.GITHUB_RUN_NUMBER || undefined,
+    runId: process.env.GITHUB_RUN_ID,
+    runNum: process.env.GITHUB_RUN_NUMBER,
   };
 }
 
@@ -43,7 +42,7 @@ export async function getOctokitCommit() {
   return await octokit.repos.getCommit({
     owner: runInfo.owner,
     repo: runInfo.repo,
-    ref: runInfo.ref || "",
+    ref: runInfo.ref,
   });
 }
 
@@ -90,20 +89,20 @@ export async function getWorkflowRunStatus() {
   const runInfo = getRunInformation();
   const githubToken = getInput("github-token", { required: true });
   const octokit = new Octokit({ auth: `token ${githubToken}` });
+
   const workflowJobs = await octokit.actions.listJobsForWorkflowRun({
     owner: runInfo.owner,
     repo: runInfo.repo,
-    run_id: parseInt(runInfo.runId || "1"),
+    run_id: parseInt(runInfo.runId || "0"),
   });
 
   const job = workflowJobs.data.jobs.find(
-    (job: Octokit.ActionsListJobsForWorkflowRunResponseJobsItem) =>
-      job.name === process.env.GITHUB_JOB
+    (job) => job.name === process.env.GITHUB_JOB
   );
 
   let lastStep;
   const stoppedStep = job?.steps.find(
-    (step: Octokit.ActionsListJobsForWorkflowRunResponseJobsItemStepsItem) =>
+    (step) =>
       step.conclusion === "failure" ||
       step.conclusion === "timed_out" ||
       step.conclusion === "cancelled" ||
@@ -113,13 +112,7 @@ export async function getWorkflowRunStatus() {
   if (stoppedStep) {
     lastStep = stoppedStep;
   } else {
-    lastStep = job?.steps
-      .reverse()
-      .find(
-        (
-          step: Octokit.ActionsListJobsForWorkflowRunResponseJobsItemStepsItem
-        ) => step.status === "completed"
-      );
+    lastStep = job?.steps.reverse().find((step) => step.status === "completed");
   }
 
   const startTime = moment(job?.started_at, moment.ISO_8601);
