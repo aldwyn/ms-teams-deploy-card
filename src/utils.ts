@@ -100,6 +100,13 @@ export async function getWorkflowRunStatus() {
     (job) => job.name === process.env.GITHUB_JOB
   );
 
+  console.log(workflowJobs.data.jobs);
+  console.log(
+    Object.keys(process.env)
+      .filter((e: string) => e.startsWith("GITHUB_"))
+      .map((e) => process.env[e])
+  );
+
   let lastStep;
   const stoppedStep = job?.steps.find(
     (step) =>
