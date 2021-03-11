@@ -100,6 +100,8 @@ export async function getWorkflowRunStatus() {
     (job) => job.name === process.env.GITHUB_JOB
   );
 
+  console.log(workflowJobs.data.jobs);
+
   let lastStep;
   const stoppedStep = job?.steps.find(
     (step) =>
