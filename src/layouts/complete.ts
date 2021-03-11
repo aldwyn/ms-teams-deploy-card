@@ -1,22 +1,19 @@
 import { getInput, warning, info } from "@actions/core";
-import { OctokitResponse, ReposGetCommitResponseData } from "@octokit/types";
+import { Octokit } from "@octokit/rest";
+import {
+  GetResponseDataTypeFromEndpointMethod,
+  OctokitResponse,
+} from "@octokit/types";
 import yaml from "yaml";
 
 import { escapeMarkdownTokens, renderActions } from "../utils";
 import { Fact } from "../models";
 import { formatCozyLayout } from "./cozy";
 
+const octokit = new Octokit();
+
 export function formatFilesToDisplay(
-  files: {
-    additions: number;
-    blob_url: string;
-    changes: number;
-    deletions: number;
-    filename: string;
-    patch: string;
-    raw_url: string;
-    status: string;
-  }[],
+  files: any,
   allowedLength: number,
   htmlUrl: string
 ) {
@@ -44,7 +41,9 @@ export function formatFilesToDisplay(
 }
 
 export function formatCompleteLayout(
-  commit: OctokitResponse<ReposGetCommitResponseData>,
+  commit: OctokitResponse<
+    GetResponseDataTypeFromEndpointMethod<typeof octokit.repos.getCommit>
+  >,
   conclusion: string,
   elapsedSeconds?: number
 ) {
@@ -111,7 +110,10 @@ export function formatCompleteLayout(
   }
 
   // Set list of files
-  if (getInput("include-files").toLowerCase() === "true") {
+  if (
+    commit.data.files !== undefined &&
+    getInput("include-files").toLowerCase() === "true"
+  ) {
     const allowedFileLen = getInput("allowed-file-len").toLowerCase();
     const allowedFileLenParsed = parseInt(
       allowedFileLen === "" ? "7" : allowedFileLen
