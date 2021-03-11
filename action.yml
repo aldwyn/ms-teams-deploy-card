@@ -1,5 +1,5 @@
-name: Microsoft Teams Deploy Card
-author: Project Toko Bifrost
+name: MS Teams Deploy Card
+author: Aldwyn Cabarrubias
 description: Notify your Teams channel with a beautiful, comprehensive deployment card
 branding:
   icon: bell
